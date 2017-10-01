@@ -1,0 +1,23 @@
+{
+"nodes": [{"name": "polnischer Sprachraum", "style": "", "x": 1000, "y": 150, "circleStyle": "", "radius": 10},
+          {"name": "Brandenburg", "style": "", "x": 800, "y": 75, "circleStyle": "", "radius": 10},
+          {"name": "Württemberg", "style": "", "x": 200, "y": 500, "circleStyle": "", "radius": 10},
+          {"name": "Bochum", "style": "", "x": 350, "y": 200, "circleStyle": "", "radius": 10},
+          {"name": "Sauerland", "style": "", "x": 450, "y": 250, "circleStyle": "", "radius": 10},
+          {"name": "Marburg (Hessen)", "style": "", "x": 450, "y": 375, "circleStyle": "", "radius": 10},
+          {"name": "Herne", "style": "", "x": 350, "y": 100, "circleStyle": "", "radius": 10},
+          {"name": "Hamm", "style": "", "x": 450, "y": 100, "circleStyle": "", "radius": 10},
+          {"name": "Münster", "style": "", "x": 450, "y": 30, "circleStyle": "grey_circle", "radius": 10},
+          {"name": "Düsseldorf", "style": "", "x": 100, "y": 275, "circleStyle": "grey_circle", "radius": 10},
+          {"name": "Soest", "style": "", "x": 550, "y": 100, "circleStyle": "grey_circle", "radius": 10}],
+"edges": [{ "source": "polnischer Sprachraum", "target": "Brandenburg", "style": "dashed_line", "text": "Jankowski", "length": 220, "textStyle": "italicFont"},
+          { "source": "Württemberg", "target": "Brandenburg", "style": "dashed_line", "text": "Moser? (Ende 18. Jhdt.)", "length": 730, "textStyle": "italicFont"},
+          { "source": "Brandenburg", "target": "Bochum", "style": "bold_line", "text": "Adam Moser (um 1890)", "length": 450, "textStyle": "italicFont"},
+          { "source": "Sauerland", "target": "Bochum", "style": "dashed_line", "text": "?", "length": 110, "textStyle": "italicFont"},
+          { "source": "Marburg (Hessen)", "target": "Bochum", "style": "solid_line", "text": "Müller", "length": 200, "textStyle": "italicFont"},
+          { "source": "Bochum", "target": "Herne", "style": "bold_line", "text": "1920", "length": 100, "textStyle": "italicFont"},
+          { "source": "Herne", "target": "Hamm", "style": "grey_line", "text": "", "length": 100, "textStyle": ""},
+          { "source": "Hamm", "target": "Münster", "style": "grey_line", "text": "", "length": 70, "textStyle": ""},
+          { "source": "Hamm", "target": "Düsseldorf", "style": "grey_line", "text": "", "length": 390, "textStyle": ""},
+          { "source": "Hamm", "target": "Soest", "style": "grey_line", "text": "", "length": 100, "textStyle": ""}]
+}

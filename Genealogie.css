@@ -1,0 +1,43 @@
+.solid_line{
+  stroke:solid;
+  stroke-width: 2;
+  stroke: black;
+}
+
+.dashed_line{
+  stroke-dasharray: 10, 4;
+  stroke-width: 2;
+  stroke: black;
+}
+
+.grey_line{
+  stroke: grey;
+  stroke-width: 2;
+}
+
+.bold_line{
+  stroke-width: 3;
+  stroke: black;
+}
+
+.grey_circle{
+  fill: grey;
+  stroke: black;
+  stroke-width: 2;
+}
+
+.white_circle{
+  fill: white;
+  stroke: black;
+  stroke-width: 2;
+}
+
+.path{
+  stroke: red;
+  stroke-width: 2;
+  fill: none;
+}
+
+.italicFont{
+  font-style: italic;
+}

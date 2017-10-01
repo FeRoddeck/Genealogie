@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Genealogie</title>
+  <link rel="stylesheet" type="text/css" href="genealogie.css">
+  <script src="d3.js"></script>
+  </head>
+<body>
+  <div style="float:left", id="delaunay">
+      <input name="delaunayButton"
+             type="button"
+             value="Delaunay Triangulation"
+             onclick="delaunayTriangulation()" />
+  </div>
+  <div id="fixPosition">
+      <input name="fixPositionButton"
+             type="button"
+             value="Fix Position"
+             onclick="fixCoordinate()" />
+  </div>
+  <script type="text/javascript">
+   var breite = 2000;
+   var hoehe = 2000;
+   // Wert um zu überprüfen ob eine Delaunay Triangulation gezeichnet werden soll
+   var del = false;
+   // Wert um zu überprüfen ob die Position der Knoten fixiert sein soll
+   var fixPosition = true;
+   // Variable dient als Zwischenspeicher, um Festzustellen welcher Knoten mit der Maus überfahren wurde
+   var selectedNode = null;
+
+
+// Laden der externen JSON Datei und speichern der Daten in (data), damit sichergestellt wird,
+// dass die Daten zur Verfügung stehen, schließt die Funktion den rest des Codes ein
+d3.json("genealogie.json", function(error, data) {
+  if (error) throw error;
+
+   // Anlegen des SVG Elementes, indem die anderen Elemente gezeichnet werden
+   var svg =  d3.select("body")
+                .append("svg")
+                .attr("width", breite)
+                .attr("height", hoehe);
+
+   // Die Kräftesimulation die auf den Bahnplan wirkt
+   var simulation = d3.forceSimulation(data.nodes)
+                      .force("link", d3.forceLink(data.edges).id(function(d) { return d.name;}).distance(function(d) {return d.length;}).iterations(7).strength(0.1))
+                      .force("collide", d3.forceCollide(30))
+                      .force("charge", d3.forceManyBody())
+                      // Startet die Simulation neu wenn sie zur Ruhe gekommen ist
+                      .on("end", function(d){simulation.restart();})
+
+   // Anlegen eines Marker Elementes, es wird mit den Linien verbunden und dient zur Darstellung eines Pfeiles
+   svg.append("defs").append("marker")
+      .attr("id", "arrow")
+      .attr("refX", 9)
+      .attr("refY", 2)
+      .attr("markerWidth", 6)
+      .attr("markerHeight", 4)
+      .attr("orient", "auto")
+      .append("path")
+      .attr("d", "M 0,0 V 4 L6,2 Z");
+
+   // Variable an die Linien, sowie ihre Texte eingefügt werden
+   var link = svg.selectAll(".link")
+                 .data(data.edges)
+
+     // die Verbindugnslinie zwischen den Knoten
+     var line = link.enter().append("line")
+                    .attr("class", function(d) {if (d.style != "") {return d.style;}})
+                    .attr("marker-end", "url(#arrow)");
+
+     // Der Text der den Kanten zugeordnet wird
+     var link_text = link.enter().append("text")
+                         .attr("dy", ".35em")
+                         .attr("dx", 6)
+                         .attr("text-anchor", "start")
+                         .attr("pointer-events", "none")
+                         .attr("class", function(d) {if (d.textStyle != ""){return d.textStyle;}})
+                         .style("font-family", "Arial")
+                         .text(function(d) { return d.text });
+
+   // Erstellung des Voronoi Diagramms ausdem die Delaunay Triangulation erstellt wird
+   var voronoi = d3.voronoi().x(function(d){return d.x;})
+                             .y(function(d){return d.y;})
+
+   // Dreieck welches aus dem Voronoi Diagramm erstellt wurde
+   var triangle = link.data(voronoi.triangles(data.nodes))
+                      .enter()
+                      .append("path")
+                      .attr("class", "path")
+
+   // Gruppe in der die Knoten und ihre jeweiligen Texte eingefügt werden
+   var node = svg.selectAll(".node")
+                 .data(data.nodes)
+                 .enter().append("g")
+
+   // Erstellung der Knoten
+   var circle = node.append("circle")
+                    .attr("class", function(d) {if (d.circleStyle != "") {return d.circleStyle;} else {return "white_circle"}})
+                    .attr("r", function(d) {return d.radius;})
+                    .attr("cx", function(d) {if (d.x != 0) {d.fx = d.x;}})
+                    .attr("cy", function(d) {if (d.y != 0) {d.fy = d.y;}})
+                    .on("mouseover", mouseover)
+                    .on("mouseout", mouseout)
+                    // Erstellung des Drag Verhaltens
+                    .call(d3.drag()
+                      .on("start", dragstarted)
+                      .on("drag", dragged)
+                      .on("end", dragended));
+
+   // Text des jeweiligen Knotens
+   var text = node.append("text")
+                  .attr("dx", function(d) {return d.radius + 2})
+                  .attr("dy", ".35em")
+                  .attr("pointer-events", "none")
+                  .text(function(d) { return d.name });
+
+   // Die Funktion ordnet in einem festen Zeitintervall den vorhanden Elementen neue Werte
+   // zu, sodass die Positionen erneuert werden
+   var ticked = function() {
+        // Falls ein Kreis mit der Maus überfahren wurde, wird dieser rot gefärbt
+        if (selectedNode != null){
+          circle.style("fill", function(d){if (d.name == selectedNode) {return "red";}});
+        }
+        if (fixPosition == false){
+          circle.attr("fx", function(d) { d.fx = null;})
+                .attr("fy", function(d) { d.fy = null;})
+        }
+        else if (fixPosition == true){
+          circle.attr("fx", function(d) { d.fx = d.x;})
+                .attr("fy", function(d) { d.fy = d.y;})
+        }
+        text.attr("x" , function(d) { return d.x; })
+            .attr("y", function(d) {return d.y;})
+        line.attr("x1", function(d) { return d.source.x; })
+            .attr("y1", function(d) { return d.source.y; })
+            .attr("x2", function(d) { return d.target.x; })
+            .attr("y2", function(d) { return d.target.y; });
+        link_text.attr("x", function(d) {
+            // Der Text soll in der Mitte der Linie gezeichnet werden
+            return (d.source.x + d.target.x)/2; })
+                 .attr("y", function(d) {
+            return (d.source.y + d.target.y)/2; });
+            // falls der Delaunay Button gedrückt wurde soll die Delaunay Triangulation gezeichnet werden
+              if (del == true){
+              // Berechnet eine neue Delaunay Triangulation und entfernt die alte
+              triangle = triangle.data(voronoi(data.nodes).triangles()), triangle.exit().remove();
+              triangle.attr("d", function(d){return "M " + d[0].x + " " + d[0].y + " L " + d[1].x + " " + d[1].y + " L " + d[2].x + " " + d[2].y + " Z";})
+              }
+              else if (del == false){
+                triangle.attr("d", "")
+              }
+        circle.attr("cx", function(d) { return d.x; })
+              .attr("cy", function(d) { return d.y; });
+          }
+
+   // Aufrufen der "ticked" Funktion, ein "tick" ist ein von d3 festgelegter Zeitabstand
+   simulation.nodes(data.nodes)
+             .on("tick", ticked);
+
+   // Funktionen zum ziehen der Maus
+   function dragstarted(d) {
+      // Überprüft ob bereits ein Drag Event aktiv ist und startet die Simulation
+      if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+          d.fx = d.x;
+          d.fy = d.y;
+        }
+
+   function dragged(d) {
+          // die Mauspositon wird den Knoten übergeben
+          d.fx = d3.event.x;
+          d.fy = d3.event.y;
+          selectedNode = d3.select(this).datum().name;
+        }
+
+   function dragended(d) {
+      // Stopt die Simulation nachdem das ziehen beendet wurde, ansonsten würde isch die Simulation je
+      // nachdem wie Knoten bewegt wurden in eine Richtung weiterbewegen
+      if (!d3.event.active) simulation.alphaTarget(0);
+          // Nach dem ziehen wird die Position wieder dynamisch, indem die fixierte Position (f.x und f.y) ausgeschaltet werden
+          d.fx = null;
+          d.fy = null;
+          selectedNode = null;
+        }
+
+    // Wenn ein kreis mit der Maus überfahren wird, wird der Variable, die als zwischenspeicher dient, der Name des Kreises zugeordnet
+    function mouseover(d){
+          selectedNode = d3.select(this).datum().name;
+        }
+
+    // löscht den Inhalt der Variable
+    function mouseout(d){
+          // Setzt das "fill" Attribut auf ihren ursprpnglichen Zustand zurück
+          circle.style("fill", function(d){;})
+          selectedNode = null;
+        }
+
+        // Ende der JSON Funktion
+        })
+
+   // Funktion schaltet del auf true/false, sodass in der "ticked" Funktion die Delaunay Triangulation entweder zeichnet, oder nicht zeichnet
+   function delaunayTriangulation(){
+     if (del == false){
+         del = true;
+        }
+     else if (del == true){
+              del = false;
+        }
+      }
+
+   // Funktion stellt feste Positionen für die Knoten an oder aus
+   function fixCoordinate(){
+     if (fixPosition == true){
+         fixPosition = false;
+       }
+     else if (fixPosition == false){
+         fixPosition = true;
+       }
+     }
+  </script>
+</body>
+</html>
